@@ -1,4 +1,6 @@
+const mongoose = require('mongoose');
 const PostModel = require('../models/Posts')
+const UserModel = require('../models/Users')
 
 class PostController {
 
@@ -83,11 +85,11 @@ class PostController {
   }
 
   // [GET] /post/:id/timeline
-  async getPostTimeline(req, res) {
+  async timelinePost(req, res) {
     const userId = req.params.id;
-
+  
     try {
-      const currentUserPosts = await PostModel.find({ userId: userId });
+      const currentUserPosts = await PostModel.find({ userId: userId })
       const followingPosts = await UserModel.aggregate([
         {
           $match: {
@@ -108,17 +110,13 @@ class PostController {
             _id: 0,
           },
         },
-      ]);
-
-      res
-        .status(200)
-        .json(currentUserPosts.concat(...followingPosts[0].followingPosts)
-        .sort((a,b)=>{
-            return b.createdAt - a.createdAt;
-        })
-        );
+      ])
+      
+      res.status(200)
+        .json(currentUserPosts.concat(...followingPosts[0].followingPosts))
+        .sort({ timestamp: -1 })
     } catch (error) {
-      res.status(500).json(error);
+      res.status(500).json(error)
     }
   }
 }
