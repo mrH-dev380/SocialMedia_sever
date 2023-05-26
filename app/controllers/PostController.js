@@ -10,7 +10,7 @@ class PostController {
 
     try {
       await newPost.save();
-      res.status(200).json("Post created!");
+      res.status(200).json(newPost);
     } catch (error) {
       res.status(500).json(error);
     }
@@ -67,16 +67,16 @@ class PostController {
   // [PUT] /post/:id/like
   async like(req, res) {
     const postId = req.params.id
-    const { userId } = req.body
+    const { _id } = req.body
 
     try {
       const post = await PostModel.findById(postId)
 
-      if(!post.likes.includes(userId)) {
-        await post.updateOne({ $push: { likes: userId}})
+      if(!post.likes.includes(_id)) {
+        await post.updateOne({ $push: { likes: _id}})
         res.status(200).json('Post liked!')
       } else {
-        await post.updateOne({ $pull: { likes: userId}})
+        await post.updateOne({ $pull: { likes: _id}})
         res.status(200).json('Post unlike!')
       }
     } catch(error) {
@@ -112,10 +112,13 @@ class PostController {
         },
       ])
       
-      res.status(200)
-        .json(currentUserPosts.concat(...followingPosts[0].followingPosts))
-        .sort({ timestamp: -1 })
-    } catch (error) {
+      const allPost = currentUserPosts.concat(...followingPosts[0].followingPosts)
+      allPost.sort((a, b) => {
+        return new Date(b.createdAt) - new Date(a.createdAt);
+      })
+
+      res.status(200).json(allPost)
+    } catch(error) {
       res.status(500).json(error)
     }
   }
